@@ -1,9 +1,7 @@
 import { S3Client, ListObjectsV2Command } from "@aws-sdk/client-s3";
 
-const BUCKET_NAME = "usagi-server-homepage-new";
-const IMAGE_FOLDER = "images/"; // 画像が格納されているフォルダ
 const headers = {
-  'Access-Control-Allow-Origin': 'https://www.usagi-server.com',
+  'Access-Control-Allow-Origin': process.env.WEB_ORIGIN,
   'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
   'Access-Control-Allow-Methods': 'OPTIONS,POST,GET',
   'Content-Type': 'application/json'
@@ -24,8 +22,8 @@ export const handler = async (event) => {
   try {
     // S3 バケット内のオブジェクトをリスト化
     const command = new ListObjectsV2Command({
-      Bucket: BUCKET_NAME,
-      Prefix: IMAGE_FOLDER, // フォルダを指定
+      Bucket: process.env.BUCKET_NAME,
+      Prefix: process.env.IMAGE_FOLDER, // フォルダを指定
     });
 
     const response = await s3Client.send(command);
@@ -33,7 +31,7 @@ export const handler = async (event) => {
     // 画像ファイルのみをフィルタリング
     const imageUrls = (response.Contents || [])
       .filter((item) => /\.(png|jpe?g|webp|gif)$/i.test(item.Key))
-      .map((item) => `https://www.usagi-server.com/${item.Key}`);
+      .map((item) => `${process.env.WEB_ORIGIN}/${item.Key}`);
 
     // 成功レスポンスを返す
     return {
